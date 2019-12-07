@@ -1,0 +1,187 @@
+#!/bin/python3
+#-*- encoding:utf-8 -*-
+
+import argparse
+import http.server
+import urllib
+import hashlib
+import xml.etree.cElementTree as ET
+from lxml import etree
+
+import WXBizMsgCrypt
+import fkxxyzMsgResponse
+
+
+class HttpError(Exception):
+    def __init__(self, code, msg):
+        Exception.__init__(self, msg)
+        self.code = code
+        self.msg = msg
+        
+        
+class wechatRequestHandler(http.server.BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        self.do_ACTION("GET")
+        
+    def do_HEAD(self):
+        self.do_ACTION("HEAD")
+        
+    def do_PUT(self):
+        self.do_ACTION("PUT")
+        
+    def do_POST(self):
+        self.do_ACTION("POST")
+        
+    def do_ACTION(self, method):
+        # 解析 url
+        parsed_url = urllib.parse.urlparse(self.path)
+        
+        # 检查访问路径
+        if parsed_url.path != "/wx":
+            self.send_response(404)
+            self.end_headers()
+            return
+        
+        # 解析 query
+        parsed_query = urllib.parse.parse_qs(parsed_url.query)
+        
+        # 检查 token
+        if not self.checkSignature(parsed_query):
+            self.send_response(401)
+            self.end_headers()
+            return
+        
+        if method == "GET":
+            try:
+                echostr = parsed_query["echostr"][0]
+            except KeyError as e:
+                self.send_response(400)
+                self.end_headers()
+                return
+                
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(echostr.encode('utf-8'))
+            return
+        
+        if method == "HEAD":
+            self.send_response(200)
+            self.end_headers()
+            return
+            
+        if method == "POST":
+            content_len = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_len)
+            r_content = self.responsePost(parsed_query, post_data)
+            if r_content is None:
+                self.send_response(401)
+                self.end_headers()
+                return
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(r_content)
+            return
+    
+    def checkSignature(self, query):
+        try:
+            signature = query["signature"][0]
+            timestamp = query["timestamp"][0]
+            nonce = query["nonce"][0]
+        except KeyError as e:
+            return False
+        
+        ret = WXBizMsgCrypt.SHA1.getSHA1(None, TOKEN, timestamp, nonce)
+        
+        return ret[0] == 0 and ret[1] == signature;
+
+    def responsePost(self, query, post_data):
+        '''
+            返回 None 表示验证或解密错误
+            返回类型 byte 表示要回应的内容
+        '''
+        
+        #print()
+        #print('post_data =')
+        #print(post_data)
+        
+        post_xml = post_data.decode('utf-8')
+        
+        # 判断是否被加密
+        encrypted = ET.fromstring(post_xml).find('MsgType') is None
+        
+        # 解密内容
+        if encrypted:
+            try:
+                msg_signature = query["msg_signature"][0]
+                timestamp = query["timestamp"][0]
+                nonce = query["nonce"][0]
+            except KeyError as e:
+                return None
+            wxc = WXBizMsgCrypt.WXBizMsgCrypt(TOKEN, AESKey, APPID)
+            ret = wxc.DecryptMsg(post_data, msg_signature, timestamp, nonce)
+            if ret[0] != 0:
+                print('---------------------------------------------- DecryptMsg error! ' + str(ret))
+                return None
+            post_xml = ret[1]
+        
+        # 解析 xml 内容
+        xmlData = ET.fromstring(post_xml)
+        recv_dict = dict()
+        for e in xmlData.iter():
+            recv_dict[e.tag] = e.text
+        
+        # 根据内容得到回应内容
+        response_l = fkxxyzMsgResponse.fkxxyzMsgResponse.response(recv_dict)
+        if response_l is None:
+            print('---------------------------------------------- fkxxyzMsgResponse error! ')
+            return None
+        
+        # 将回应打包成 xml
+        xml_elem = etree.Element('xml')
+        for t in response_l:
+            e = etree.SubElement(xml_elem, t[0])
+            if type(t[1]) == str:
+                e.text = etree.CDATA(t[1])
+            elif type(t[1]) == int:
+                e.text = str(t[1])
+            else:
+                print('Unknow type' + str(t[1]))
+                assert(0)
+        response_xml = etree.tostring(xml_elem, encoding='utf-8')
+        
+        #print()
+        #print('response_xml =')
+        #print(response_xml)
+        if not encrypted:
+            return response_xml
+        
+        # 加密回应的 xml 内容
+        ret = wxc.EncryptMsg(response_xml.decode('utf-8'), nonce)
+        if ret[0] != 0:
+            print('---------------------------------------------- EncryptMsg error! ' + str(ret) + ' ' + str(response_xml))
+            return None
+        return ret[1].encode('utf-8')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument('--port', '-p', help = 'Specify the http server port.', default = 80)
+    parser.add_argument('--token', '-t', help = 'Specify the token.', default = "abc")
+    parser.add_argument('--appid', '-a', help = 'Specify the appid.', default = "wx1000000000000000")
+    parser.add_argument('--aeskey', '-k', help = 'Specify the EncodingAESKey.', default = '0'*43)
+    args = parser.parse_args()
+    args.port = int(args.port)
+    global TOKEN
+    TOKEN = args.token
+    global APPID
+    APPID = args.appid
+    global AESKey
+    AESKey = args.aeskey
+    
+    server = http.server.HTTPServer(('', args.port),  wechatRequestHandler)
+    print('Server is running, user <Ctrl+C> to stop.')
+    server.serve_forever()
+    server.server_close()
+
+
+
