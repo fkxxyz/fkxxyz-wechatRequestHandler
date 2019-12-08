@@ -75,6 +75,20 @@ import os
 import sys
 from math import *
 
+im = [
+    '[+-]?0[Bb][01]+',
+    '[+-]?0[Oo][01234567]+',
+    '[0123456789]+',
+    '[+-]?0[Xx][0123456789abcdefABCDEF]+'
+]
+imk = {
+    2:0,
+    8:1,
+    10:2,
+    16:3
+}
+
+
 def getHelp():
     return _help
     
@@ -82,17 +96,17 @@ def getFuncHelp():
     return '目前暂时支持以下函数\n' + ' '.join(func_list)
 
 def isValid(exp_str):
-    r = r'^([-+*/(){}%\|&~^!<>=OoXxBb,\. \d]|and|or|not|' + '|'.join(constant_list) + '|' + '|'.join(func_list) +')+$'
+    r = r'^(('+'|'.join(im)+r')|[-+*/(){}%\|&~^!<>=,\. ]|and|or|not|' + '|'.join(constant_list) + '|' + '|'.join(func_list) +')+$'
     return re.match(r, exp_str) is not None
 
 def tryInt(num_str):
-    if re.match('^[0123456789]+$', num_str) is not None:
+    if re.match('^'+im[imk[10]]+'$', num_str) is not None:
         return int(num_str, 10)
-    if re.match('^[+-]?0[Xx][0123456789abcdefABCDEF]+$', num_str) is not None:
+    if re.match('^'+im[imk[16]]+'$', num_str) is not None:
         return int(num_str, 16)
-    if re.match('^[+-]?0[Bb][01]+$', num_str) is not None:
+    if re.match('^'+im[imk[2]]+'$', num_str) is not None:
         return int(num_str, 2)
-    if re.match('^[+-]?0[Oo][01234567]+$', num_str) is not None:
+    if re.match('^'+im[imk[8]]+'$', num_str) is not None:
         return int(num_str, 8)
     return None
 
