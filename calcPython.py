@@ -142,7 +142,7 @@ def calc(exp_str):
             '这是什么鬼'
         ]
         pd = ' ' * (err.offset - 1)
-        ret = err.text + '\n' + \
+        ret = exp_str + '\n' + \
             pd + '^' + '\n' + \
             msg_list[random.randint(0,len(msg_list)-1)]
     except ZeroDivisionError:
