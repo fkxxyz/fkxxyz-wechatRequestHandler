@@ -132,7 +132,7 @@ class wechatRequestHandler(http.server.BaseHTTPRequestHandler):
             recv_dict[e.tag] = e.text
         
         # 根据内容得到回应内容
-        response_l = fkxxyzMsgResponse.fkxxyzMsgResponse.response(recv_dict)
+        response_l = fkxxyzMsgResponse.fkxxyzMsgResponse(recv_dict).response()
         if response_l is None:
             print('---------------------------------------------- fkxxyzMsgResponse error! ')
             return None
