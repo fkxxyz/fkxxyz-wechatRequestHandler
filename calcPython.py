@@ -11,7 +11,7 @@ constant_list = ['pi', 'e', 'tau', 'inf', 'nan', 'true', 'false', 'True', 'False
 func_list = list(set(func_list) - set(constant_list))
 func_list.sort()
 
-_help = '''支持的运算符
+_detail_help = '''支持的运算符
 1. 基本运算
    加减乘除  + - * /
    乘方      **
@@ -31,6 +31,7 @@ _help = '''支持的运算符
    与        and
    或        or
    非        not
+   （以上单词前后记得加空格）
 4. 比较运算符
    相等      ==
    不等      !=
@@ -52,19 +53,35 @@ _help = '''支持的运算符
    浮点无穷大 inf
    浮点非数字 nan
 7. 函数支持
-   若干个函数，回复“函数”我告诉你支持那些。
+   支持干个函数，回复“函数”我告诉你支持那些。'''
 
+_help = '''【基本】
+基本的加减乘除计算，只要是整数的话无论数字多大多少位只要在我承受范围内都可以
+加减乘除分别符号表示：  + - * /
+四则运算还是乘除优先，改变优先级记得加括号
+可以套若干个层的小括号，多复杂都可以哦
+记住：乘号*不能省略，不然我会看不懂
+可以科学计数法，例如 3.4e4 表示3.4万；3.4e-4 表示 0.00034
+
+【进阶】
+还可以乘方三角函数对数等等计算
+两个常数 pi 和 e 可以用
+乘方用两个*表示，例如 2**8 表示2的8次方
+函数记得加括号例如： sin(pi/2) log(e**3)
+pow(x,y)表示x的y次方
+pow(x,1/y)表示把x开y次方
+sqrt(x)可以快速开平方
+发送“函数”给我我列举出所有我支持的函数
+
+【进制】
 除了支持十进制以外，以下表示都可以的
    十六进制数 0x开头
    八进制数  0o开头
    二进制数  0b开头
-
-发任意数字我可以帮你转换成二进制、八进制、十进制、十六进制
-
-发算式，我就可以帮你算算
-1+1=2我还是能算出来哒～/:,@P
+单独发任意形式的数字我可以帮你转换成二进制、八进制、十进制、十六进制
 
 只能发算式哦，要是发别的我就给你反过来念
+以上是基本帮助，要看详细帮助，发送“详细”两个字我列举出所有运算符号
 '''
 
 
@@ -92,11 +109,14 @@ imk = {
 def getHelp():
     return _help
     
+def getDetailHelp():
+    return _detail_help
+    
 def getFuncHelp():
     return '目前暂时支持以下函数\n' + ' '.join(func_list)
 
 def isValid(exp_str):
-    r = r'^(('+'|'.join(im)+r')|[-+*/(){}%\|&~^!<>=,\. ]|and|or|not|' + '|'.join(constant_list) + '|' + '|'.join(func_list) +')+$'
+    r = r'^(('+'|'.join(im)+r')|[-+*/(){}%\|&~^!<>=,\. e]|and|or|not|' + '|'.join(constant_list) + '|' + '|'.join(func_list) +')+$'
     return re.match(r, exp_str) is not None
 
 def tryInt(num_str):
