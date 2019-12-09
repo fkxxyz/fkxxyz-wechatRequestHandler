@@ -64,7 +64,7 @@ class fkxxyzMsgResponse:
             
             # 订阅事件
             if event == "subscribe":
-                return self.textMsg("你来啦，终于等到你啦～\n我现在只能当计算器给你用哦，来试试吧。\n发送“帮助”给我我教你怎么用。")
+                return self.textMsg("你来啦，终于等到你啦～\n我现在只能当计算器给你用哦，后续我会分享更多技术，先来试试计算器吧。\n发送“帮助”给我我教你怎么用。")
 
         # 其它消息
         msg_list = [
