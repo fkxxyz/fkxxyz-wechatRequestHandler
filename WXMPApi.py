@@ -35,8 +35,12 @@ class menu_api:
         json_result = json.loads(result.content)
         return json_result
 
-    def put(self):
-        
+    def put(self, menu_json):
+        url = wx_api_url + '/cgi-bin/menu/create?access_token=' + self.access_token
+        result = requests.put(url, menu_json)
+        json_result = json.loads(result.content)
+        return json_result
+
 
 
 
