@@ -2,7 +2,11 @@
 #-*- encoding:utf-8 -*-
 
 import random
+import requests
+
+
 import calcPython
+import baiduOcr
 
 def MakeTestTextMsgRecv(text):
     return {
@@ -13,6 +17,13 @@ def MakeTestTextMsgRecv(text):
         'Content': text,
         'MsgId': '10101010',
     }
+
+
+hello_msg = """你来啦，终于等到你啦～
+我现在可以当你的计算器哦，把算式发给我我就可以帮你算算，来试试吧。
+发送“帮助”给我我教你具体格式。
+
+还可以给我发图片，我可以帮你提取出图片里的文字，比如拍照书本给我我都给你转成文字可以复制的哦。"""
 
 
 class fkxxyzMsgResponse:
@@ -35,14 +46,22 @@ class fkxxyzMsgResponse:
         '''
         if 'MsgType' not in self.recv_dict:
             return None
-        
+
         # 文本类消息
         if self.recv_dict['MsgType'] == 'text':
             text = self.recv_dict['Content'].strip()
             
+            # 欢迎语
+            if text.lower() == "hello" or text == "你好":
+                return self.textMsg(hello_msg)
+            
             # 计算器帮助
             if text.lower() == "help" or text == "帮助":
                 return self.textMsg(calcPython.getHelp())
+            
+            # 计算器详细帮助
+            if text.lower() == "detail" or text == "详细":
+                return self.textMsg(calcPython.getDetailHelp())
             
             # 计算器帮助
             if text.lower() == "func" or text == "函数":
@@ -54,7 +73,10 @@ class fkxxyzMsgResponse:
                 if ret is None:
                     return self.textMsg("计算量太大啦人家承受不住 ～.～")
                 return self.textMsg(ret)
-            
+                
+            if text == '【收到不支持的消息类型，暂无法显示】':
+                return self.textMsg(self.unsupportMsg())
+                
             # 反转字符串
             return self.textMsg(text[::-1])
 
@@ -64,14 +86,33 @@ class fkxxyzMsgResponse:
             
             # 订阅事件
             if event == "subscribe":
-                return self.textMsg("你来啦，终于等到你啦～\n我现在只能当计算器给你用哦，后续我会分享更多技术，先来试试计算器吧。\n发送“帮助”给我我教你怎么用。")
+                return self.textMsg(hello_msg)
 
+        # 图片类信息
+        if self.recv_dict['MsgType'] == 'image':
+            pic_url = self.recv_dict['PicUrl']
+            pic_data = requests.get(pic_url).content
+            ret = baiduOcr.getPicText_bdOcr(pic_data)
+            if type(ret) != str:
+                return self.textMsg("我这边识别图片出问题了，过段时间再来试试吧")
+            if len(ret) == 0:
+                msg_list = [
+                    "什么都没识别到",
+                    "图片里可能没有文字",
+                    "我没看到图里有文字",
+                    "唉，我找不到图里的文字，你帮我看看吧"
+                ]
+                return self.textMsg(msg_list[random.randint(0,len(msg_list)-1)])
+            return self.textMsg(ret)
+        return self.textMsg(self.unsupportMsg())
+
+    def unsupportMsg(self):
         # 其它消息
         msg_list = [
             '你发的什么呢，我暂时理解不了。',
             '我暂时理解不了此类消息，怎么办'
         ]
-        return self.textMsg(msg_list[random.randint(0,len(msg_list)-1)])
+        return msg_list[random.randint(0,len(msg_list)-1)]
 
 if __name__ == '__main__':
     import sys
