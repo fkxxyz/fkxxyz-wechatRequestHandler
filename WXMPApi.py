@@ -1,12 +1,14 @@
-#!/bin/python3
+#!/usr/bin/env python
 
 
 wx_api_url = 'https://api.weixin.qq.com'
 
 import requests
+import urllib
 import json
 
 def get_access_token(appid, secret):
+    # 获取 access_token
     url = wx_api_url + '/cgi-bin/token?grant_type=client_credential&appid='+appid+'&secret='+secret
     result = requests.get(url)
     json_result = json.loads(json_result)
@@ -19,28 +21,53 @@ def get_access_token(appid, secret):
 
     return json_result["access_token"]
 
-class menu_api:
+
+class api:
     def __init__(self, access_token):
         self.access_token = access_token
 
-    def get(self):
-        url = wx_api_url + '/cgi-bin/get_current_selfmenu_info?access_token=' + self.access_token
+    def cgi_bin_get(self, type_str, url_param = {}):
+        url_param["access_token"] = self.access_token
+        url = wx_api_url + '/cgi-bin/' + type_str +'?' + urllib.parse.urlencode(url_param)
         result = requests.get(url)
         json_result = json.loads(result.content)
         return json_result
+
+    def cgi_bin_post(self, type_str, data = None, files = None):
+        url = wx_api_url + '/cgi-bin/' + type_str +'?access_token=' + self.access_token
+        result = requests.post(url, data = data, files = files)
+        json_result = json.loads(result.content)
+        return json_result
+
+class menu_api(api):
+
+    def create(self, data):
+        # 创建接口
+        return self.cgi_bin_post("menu/create", data)
+        
+    def get_current_selfmenu_info(self):
+        # 查询接口
+        return self.cgi_bin_get("get_current_selfmenu_info")
 
     def delete_all(self):
-        url = wx_api_url + '/cgi-bin/menu/delete?access_token=' + self.access_token
-        result = requests.get(url)
-        json_result = json.loads(result.content)
-        return json_result
+        # 删除接口
+        return self.cgi_bin_get("menu/delete")
 
-    def put(self, menu_json):
-        url = wx_api_url + '/cgi-bin/menu/create?access_token=' + self.access_token
-        result = requests.put(url, menu_json)
-        json_result = json.loads(result.content)
-        return json_result
+    def add_conditional(self, data):
+        # 创建个性化菜单
+        return self.cgi_bin_post("menu/addconditional", data)
 
+    def del_conditional(self, data):
+        # 删除个性化菜单
+        return self.cgi_bin_post("menu/delconditional", data)
+
+    def trymatch(self, data):
+        # 测试个性化菜单匹配结果
+        return self.cgi_bin_post("menu/trymatch", data)
+
+    def get(self):
+        # 获取自定义菜单配置
+        return self.cgi_bin_get("menu/get")
 
 
 

@@ -1,0 +1,35 @@
+
+{
+    "button":
+    [
+        {	
+            "type":"click",
+            "name":"测试1",
+            "key":"MENU_TEST1"
+        },
+        {
+            "name":"菜单",
+            "sub_button":[
+                {	
+                    "type":"click",
+                    "name":"子菜单1",
+                    "url":"http://www.soso.com/",
+                    "key":"MENU_TEST2"
+                },
+                {
+                    "type":"click",
+                    "name":"子菜单2",
+                    "url":"http://mp.weixin.qq.com",
+                    "key":"MENU_TEST3"
+                },
+                {
+                    "type":"click",
+                    "name":"子菜单3",
+                    "key":"MENU_TEST4"
+                }
+            ]
+        }
+    ]
+}
+ 
+ 

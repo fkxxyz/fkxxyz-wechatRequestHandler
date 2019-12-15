@@ -1,19 +1,18 @@
-#!/bin/python3
+#!/usr/bin/env python
 
-import urllib
 import requests
 import base64
-import json
 import random
 import sys
 
 
-def getPicText_bdOcr(pic_binary):
+def getPicText_bdOcr(pic_binary, type_index = 1):
     '''
         利用百度 ocr 接口识别文字
         pic_binary  是图片文件的二进制数据
+        type_index  是百度提供的识别类型 0 表示一般识别， 1 表示精准识别
         如果成功，则返回识别出的文字字符串
-        如果出错，则返回错误代码
+        如果出错，则返回错误信息
     '''
 
     # 获取 appid 的 cookie
@@ -21,13 +20,17 @@ def getPicText_bdOcr(pic_binary):
     baiduid_cookie = cookie[:cookie.find(';')]
 
     # 准备头部
-    post_session = requests.session()
-    post_session.headers['Cookie'] = baiduid_cookie
-    post_session.headers['Referer'] = "http://ai.baidu.com/tech/ocr/general"
+    headers = {
+        'Cookie': baiduid_cookie,
+        'Referer': "http://ai.baidu.com/tech/ocr/general"
+    }
 
     # 准备数据
     post_type_l = ['general_location' , 'https://aip.baidubce.com/rest/2.0/ocr/v1/accurate']
-    post_type = post_type_l[random.randint(0, len(post_type_l) - 1)]  # 两个类型随机选个类型
+    if type_index is None:
+        post_type = post_type_l[random.randint(0, len(post_type_l) - 1)]  # 两个类型随机选个类型
+    else:
+        post_type = post_type_l[type_index]
 
     post_data = {
         'type': post_type,
@@ -36,13 +39,12 @@ def getPicText_bdOcr(pic_binary):
         'image': 'data:image/jpeg;base64,' + base64.b64encode(pic_binary).decode('utf-8'),
         'language_type': 'CHN_ENG'
     }
-    content = urllib.parse.urlencode(post_data) 
 
     # 发送 post 请求
-    response = post_session.post('http://ai.baidu.com/aidemo', post_data)
+    response = requests.post('http://ai.baidu.com/aidemo', data = post_data, headers = headers)
 
     # 解析请求结果
-    response_json = json.loads(response.content.decode('utf-8'))
+    response_json = response.json()
     errno = response_json['errno']
     if errno != 0:
         return '我这边出错啦！' + response_json['msg']
@@ -63,7 +65,7 @@ if __name__ == '__main__':
         exit(1)
 
     pic_binary = open(sys.argv[1], 'rb').read()
-    print(getPicText_bdOcr(pic_binary))
+    print(getPicText_bdOcr(pic_binary, 1))
 
 
 

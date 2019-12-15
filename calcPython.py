@@ -2,87 +2,93 @@
 #-*- encoding:utf-8 -*-
 
 import math
+constant_list = [
+    'pi',
+    'tau',
+    'inf',
+    'nan',
+    'true',
+    'false'
+]
 
-func_list = [ f for f in dir(math) if not f.startswith('_')]
+func_list = [
+    'sin', 'cos', 'tan',
+    'asin', 'acos', 'atan', 'atan2',
+    'sinh', 'cosh', 'tanh',
+    'asinh', 'acosh', 'atanh',
+    'abs', 'ceil', 'floor',
+    'exp', 'pow', 'sqrt',
+    'log', 'log2', 'log10', 'lg',
+    'fact'
+]
 
-func_list.extend(['abs'])
-constant_list = ['pi', 'e', 'tau', 'inf', 'nan', 'true', 'false', 'True', 'False']
-
-func_list = list(set(func_list) - set(constant_list))
-func_list.sort()
-
-_detail_help = '''支持的运算符
-1. 基本运算
-   加减乘除  + - * /
-   乘方      **
-   括号      ( )
-   取余      %
-   整除      //
-2. 位运算
-   按位与    |
-   按位或    &
-   按位异或  ^
-   按位取反  ~
-   左移      <<
-   右移      >>
-3. 逻辑运算
-   真        true
-   假        false
-   与        and
-   或        or
-   非        not
-   （以上单词前后记得加空格）
-4. 比较运算符
-   相等      ==
-   不等      !=
-   大于      >
-   小于      <
-   大于等于  >=
-   小于等于  <=
-5. 集合
-   集合表示  {1,2,3,...}
-   空集      {}
-   求交集    &
-   求并集    |
-   求差集    -
-   对称差集  ^
-6. 数学常量
-   圆周率  pi
-   自然对数的底 e
-   圆周常数 tau
-   浮点无穷大 inf
-   浮点非数字 nan
-7. 函数支持
-   支持干个函数，回复“函数”我告诉你支持那些。'''
-
-_help = '''【基本】
-基本的加减乘除计算，只要是整数的话无论数字多大多少位只要在我承受范围内都可以
-加减乘除分别符号表示：  + - * /
-四则运算还是乘除优先，改变优先级记得加括号
-可以套若干个层的小括号，多复杂都可以哦
-记住：乘号*不能省略，不然我会看不懂
-可以科学计数法，例如 3.4e4 表示3.4万；3.4e-4 表示 0.00034
-
-【进阶】
-还可以乘方三角函数对数等等计算
-两个常数 pi 和 e 可以用
-乘方用两个*表示，例如 2**8 表示2的8次方
-函数记得加括号例如： sin(pi/2) log(e**3)
-pow(x,y)表示x的y次方
-pow(x,1/y)表示把x开y次方
-sqrt(x)可以快速开平方
-发送“函数”给我我列举出所有我支持的函数
+_detail_help = '''【详细介绍】
+可以进行乘方三角函数对数等等计算
+两个特殊常数 pi 和 e 可以用
+用函数一定要加括号例如：sin(pi/2) log(e**3)
+pow(x,y) 表示x的y次方
+pow(x,1/y) 表示把x开y次方
+sqrt(x) 可以开平方
+甚至可以复数计算哦，用 j 表示虚数单位
+例如 3+4j 表示实数部分为3，虚数部分为4的数
 
 【进制】
 除了支持十进制以外，以下表示都可以的
-   十六进制数 0x开头
-   八进制数  0o开头
-   二进制数  0b开头
+ 十六进制数 0x开头
+ 八进制数  0o开头
+ 二进制数  0b开头
 单独发任意形式的数字我可以帮你转换成二进制、八进制、十进制、十六进制
 
-只能发算式哦，要是发别的我就给你反过来念
-以上是基本帮助，要看详细帮助，发送“详细”两个字我列举出所有运算符号
-'''
+【运算符】
+1. 基本运算符
+ + - * / ** ( )
+ 取余  %
+ 整除  //
+2. 位运算
+ | & ~ ^ << >>
+3. 逻辑运算
+ 真假  true false
+ 与或非  and or not
+（以上单词前后记得加空格）
+4. 比较运算符
+ 相等和不等  == !=
+ 大于和小于  > <
+ 大于等于  >=
+ 小于等于  <=
+5. 集合
+ 集合表示 {1,2,3,...}
+ 空集  {}
+ 求交集  &
+ 求并集  |
+ 求差集  -
+ 对称差集  ^
+
+【函数支持】
+（反）三角函数 sin cos tan
+asin acos atan atan2(x,y)
+（反）双曲函数
+sinh cosh tanh
+asinh acosh atanh
+取模或绝对值 abs
+向上取整 ceil
+向下取整 floor
+乘方开方 exp pow(x,y) sqrt
+对数 log log2 log10 lg'''
+
+
+_help = '''基本的加减乘除计算，只要是整数的话无论数字多大多少位只要在我承受范围内都可以
+加减乘除分别用符号表示：  + - * /
+四则运算还是乘除优先，改变优先级记得加括号，可以套若干个层的小括号，多复杂都可以
+记住：乘号*不能省略，不然我会看不懂
+举例： 138*(43+31222)-1
+
+乘方用两个*表示，例如 2**8 表示2的8次方
+阶乘用 fact(4) 表示 4 的阶乘，当然 4! 也可以
+可以科学计数法，例如 3.4e4 表示3.4万；3.4e-4 表示 0.00034
+
+以上是基本的数学计算，还支持一些更高级的数学运算，感兴趣的话，可以发送“详细”。
+
+只能发算式哦，要是发别的我就给你反过来念'''
 
 
 import re
@@ -105,7 +111,6 @@ imk = {
     16:3
 }
 
-
 def getHelp():
     return _help
     
@@ -115,9 +120,49 @@ def getDetailHelp():
 def getFuncHelp():
     return '目前暂时支持以下函数\n' + ' '.join(func_list)
 
-def isValid(exp_str):
-    r = r'^(('+'|'.join(im)+r')|[-+*/(){}%\|&~^!<>=,\. e]|and|or|not|' + '|'.join(constant_list) + '|' + '|'.join(func_list) +')+$'
-    return re.match(r, exp_str) is not None
+def convValid(exp_str):
+    # 处理替换中文字符
+    exp_str = exp_str.translate(str.maketrans(
+        '！｜÷，～＋－—（）｛｝＜＞＝％＆＾＊×　ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ',
+        '!|/,~+--(){}<>=%&^** abcdefghijklmnopqrstuvwxyz'
+        ))
+    
+    # 全部转换成小写
+    exp_str = exp_str.lower()
+    
+    # 替换一些特殊符号
+    exp_str = re.sub('(π|pai)', ' pi ', exp_str)
+    exp_str = re.sub('(Ø|∅|Φ)', '{}', exp_str)
+    exp_str = re.sub('(≠)', '!=', exp_str)
+    
+    # 初步正则匹配
+    r = r'^(('+'|'.join(im)+r')|[-+*/(){}%\|&~^!<>=,\. ej]|and|or|not|' + '|'.join(constant_list) + '|' + '|'.join(func_list) +')+$'
+    if re.match(r, exp_str) is None:
+        return None
+    
+    # 逻辑运算符和常数前后确保有空格
+    exp_str = re.sub('([^ ])(and|or|not' + '|'.join(constant_list) + ')', r'\1 \2', exp_str)
+    exp_str = re.sub('(and|or|not' + '|'.join(constant_list) + ')([^ ])', r'\1 \2', exp_str)
+    
+    # 科学计数法 1 省略的补上
+    exp_str = re.sub('([\W]|^)(e[\d]+)', r'\1 1\2', exp_str)
+    
+    # 虚数单位 j 前面的 1 省略的补上
+    exp_str = re.sub('([\W]|^)j([\W]|$)', r'\1 1j\2', exp_str)
+    
+    # 函数调用前面确保有空格
+    #exp_str = re.sub('([^ ])(' + '|'.join(constant_list) + ')', r'\1 \2', exp_str)
+    
+    # 函数调用后面确保有括号
+    exp_str = re.sub('(' + '|'.join(func_list) + ') +([^(].*)', r'\1(\2)', exp_str)
+    
+    # 阶乘
+    exp_str = re.sub('([\d]+)!([^=]|$)', r'fact(\1)\2', exp_str)
+    
+    # 空格合并
+    exp_str = re.sub(' +', ' ', exp_str)
+    
+    return exp_str
 
 def tryInt(num_str):
     if re.match('^'+im[imk[10]]+'$', num_str) is not None:
@@ -142,14 +187,16 @@ def calc(exp_str):
     if i is not None:
         ic = 3 if i < 0 else 2
         return \
-            '十六进制    ' + hex(i)[ic:].upper() + '\n' + \
-            '　十进制    ' + str(i) + '\n' + \
-            '　八进制    ' + oct(i)[ic:] + '\n' + \
-            '　二进制    ' + bin(i)[ic:]
+            '十六进制' + '\n' + hex(i)[ic:].upper() + '\n' + '\n' + \
+            '十进制' + '\n' + str(i) + '\n' + '\n' + \
+            '八进制' + '\n' + oct(i)[ic:] + '\n' + '\n' + \
+            '二进制' + '\n' + bin(i)[ic:]
     try:
         exp_str = exp_str.replace('{}', 'set()')
         exp_str = exp_str.replace('true', 'True')
         exp_str = exp_str.replace('false', 'False')
+        fact = factorial
+        lg = log10
         ret = eval(exp_str)
         if type(ret) == tuple:
             ret = tuple_err_list[random.randint(0, len(tuple_err_list)-1)]
@@ -180,11 +227,13 @@ def calc(exp_str):
             '对不起，我算不出/::<',
             '看到这个式子，我凌乱了...',
             '你继续，我默默地看着你自嗨',
-            '别整我，求你'
+            '别整我，求你',
+            '定义域是不是有问题？想想看'
         ]
         ret = msg_list[random.randint(0,len(msg_list)-1)]
-    except NameError:
-        ret = '你不能这样子，我不知道这是什么。'
+    except NameError as err:
+        ret = err.args[0]
+        ret = re.sub(r"name '(.+)' is not defined", r'用函数的话把括号加上吧，不然我以为 “\1” 是个函数。', ret)
     except TypeError as err:
         ret = err.args[0]
         ret = re.sub(".*tuple.*", tuple_err_list[random.randint(0,len(tuple_err_list)-1)], ret)
@@ -236,8 +285,8 @@ def main():
         return 1
     
     # 检查表达式合法
-    exp_str = sys.argv[1]
-    if not isValid(exp_str):
+    exp_str = convValid(sys.argv[1])
+    if exp_str is None:
         sys.stderr.write('不正确的表达式\n')
         return 2
     
