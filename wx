@@ -161,7 +161,7 @@ class wechatRequestHandler(http.server.BaseHTTPRequestHandler):
         for e in xmlData.iter():
             recv_dict[e.tag] = e.text
         if content_match is not None:
-            recv_dict['Content'] = 
+            recv_dict['Content'] = content_match.groups()[0]
         
         # 根据内容得到回应内容
         response_l = fkxxyzMsgResponse.fkxxyzMsgResponse(recv_dict).response()
@@ -174,7 +174,7 @@ class wechatRequestHandler(http.server.BaseHTTPRequestHandler):
         for t in response_l:
             e = etree.SubElement(xml_elem, t[0])
             if type(t[1]) == str:
-                e.text = etree.CDATA(t[1])
+                e.text = etree.CDATA(t[1].replace(']]>', ']] >'))
             elif type(t[1]) == int:
                 e.text = str(t[1])
             else:

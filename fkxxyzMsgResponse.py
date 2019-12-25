@@ -58,6 +58,8 @@ class fkxxyzMsgResponse:
         # 文本类消息
         if self.recv_dict['MsgType'] == 'text':
             text = self.recv_dict['Content'].strip()
+
+            print('\033[33m' + text + '\033[0m')
             
             # 欢迎语
             if text.lower() == "hello" or text == "你好":

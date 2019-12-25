@@ -286,9 +286,10 @@ class googleTranslator():
         response_json = response.json()
         
         result = ''
-        for lt in response_json[0]:
-            if type(lt[0]) == str:
-                result += lt[0]
+        if response_json[0] is not None:
+            for lt in response_json[0]:
+                if type(lt[0]) == str:
+                    result += lt[0]
         return result
         
 
