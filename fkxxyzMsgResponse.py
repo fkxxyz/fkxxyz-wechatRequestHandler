@@ -22,7 +22,7 @@ def MakeTestTextMsgRecv(text):
 
 hello_msg = """你来啦，终于等到你啦～
 我现在有三个超能力：
-1. 发送任意算式给我，我能帮你算出来，很多高级运算也可以哦，发送“帮助”给我告诉你格式。
+1. 做你的计算器，发送任意算式给我，我能帮你算出来，很多高级运算也可以哦，感兴趣的话发送“帮助”我给你展示所有计算功能。
 2. 给我发送图片，我可以帮你提取出图片里的文字，比如拍照书本给我我都给你转成文字可以复制。
 3. 告诉我英文帮你翻译成中文，告诉我中文我帮你翻译成英文。要是别的国家的语言....我也给你翻译成中文吧。
 
@@ -55,7 +55,6 @@ class fkxxyzMsgResponse:
         '''
         if 'MsgType' not in self.recv_dict:
             return None
-
         # 文本类消息
         if self.recv_dict['MsgType'] == 'text':
             text = self.recv_dict['Content'].strip()
@@ -79,16 +78,18 @@ class fkxxyzMsgResponse:
                 if ret is None:
                     return self.textMsg("计算量太大啦人家承受不住 ～.～")
                 return self.textMsg(ret)
-                
+            
             if text == '【收到不支持的消息类型，暂无法显示】':
                 return self.textMsg(self.unsupportMsg())
             
             # 英汉互译
             if googleTranslate.isChinese(text):
-                return self.textMsg(trans.translate(text, 'zh-CN', 'en'))
+                trans_result = trans.translate(text, 'zh-CN', 'en')
             else:
-                return self.textMsg(trans.translate(text, 'auto', 'zh-CN'))
-
+                trans_result = trans.translate(text, 'auto', 'zh-CN')
+            if trans_result is not None:
+                return self.textMsg(trans_result)
+            
             # 反转字符串
             return self.textMsg(text[::-1])
 

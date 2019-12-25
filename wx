@@ -7,6 +7,7 @@ import urllib
 import hashlib
 import xml.etree.cElementTree as ET
 from lxml import etree
+import re
 
 import WXBizMsgCrypt
 import fkxxyzMsgResponse
@@ -105,10 +106,27 @@ class wechatRequestHandler(http.server.BaseHTTPRequestHandler):
         #print('post_data =')
         #print(post_data)
         
-        post_xml = post_data.decode('utf-8')
+        try:
+            post_xml = post_data.decode('utf-8')
+        except UnicodeDecodeError as e:
+            print('---------------------------------------------- post_data decode error! ')
+            print(e)
+            print('post_data = ' + str(post_data))
+            print('----------------------------------------------')
+            return None
         
         # 判断是否被加密
-        encrypted = ET.fromstring(post_xml).find('MsgType') is None
+        try:
+            content_match = re.match('.*<Content><!\[CDATA\[(.*)]]></Content>.*', post_xml, flags=re.DOTALL)
+            if content_match is not None:
+                post_xml = post_xml[:content_match.regs[1][0]] + post_xml[content_match.regs[1][1]:]
+            encrypted = ET.fromstring(post_xml).find('MsgType') is None
+        except ET.ParseError as e:
+            print('---------------------------------------------- ET fromstring error! ')
+            print(e)
+            print('post_xml = ' + str(post_xml.encode('utf-8')))
+            print('----------------------------------------------')
+            return None
         
         # 解密内容
         if encrypted:
@@ -117,6 +135,7 @@ class wechatRequestHandler(http.server.BaseHTTPRequestHandler):
                 timestamp = query["timestamp"][0]
                 nonce = query["nonce"][0]
             except KeyError as e:
+                print('---------------------------------------------- query format error! ' + str(ret))
                 return None
             wxc = WXBizMsgCrypt.WXBizMsgCrypt(TOKEN, AESKey, APPID)
             ret = wxc.DecryptMsg(post_data, msg_signature, timestamp, nonce)
@@ -126,10 +145,23 @@ class wechatRequestHandler(http.server.BaseHTTPRequestHandler):
             post_xml = ret[1]
         
         # 解析 xml 内容
-        xmlData = ET.fromstring(post_xml)
+        try:
+            content_match = re.match('.*<Content><!\[CDATA\[(.*)]]></Content>.*', post_xml, flags=re.DOTALL)
+            if content_match is not None:
+                post_xml = post_xml[:content_match.regs[1][0]] + post_xml[content_match.regs[1][1]:]
+            xmlData = ET.fromstring(post_xml)
+        except ET.ParseError as e:
+            print('---------------------------------------------- DecryptMsged ET fromstring error! ')
+            print(e)
+            print('post_xml = ' + str(post_xml.encode('utf-8')))
+            print('----------------------------------------------')
+            return None
+            
         recv_dict = dict()
         for e in xmlData.iter():
             recv_dict[e.tag] = e.text
+        if content_match is not None:
+            recv_dict['Content'] = 
         
         # 根据内容得到回应内容
         response_l = fkxxyzMsgResponse.fkxxyzMsgResponse(recv_dict).response()

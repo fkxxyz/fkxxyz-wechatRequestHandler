@@ -312,7 +312,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         exit(1)
 
-    text = sys.argv[1]
+    text = ' '.join(sys.argv[1:])
     if isChinese(text):
         print(googleTranslator().translate(text, 'zh-CN', 'en'))
     else:
